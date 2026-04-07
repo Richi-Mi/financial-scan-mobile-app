@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Finantial Scan</string>
+    <string name="nav_bar_home">Inicio</string>
+    <string name="nav_bar_history">Historial</string>
+    <string name="nav_bar_scan">Escanear</string>
+    <string name="nav_bar_record">Dictar</string>
+    <string name="nav_bar_profile">Perfil</string>
+</resources>
