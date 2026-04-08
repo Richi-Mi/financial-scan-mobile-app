@@ -1,0 +1,89 @@
+package com.richi_mc.myapplication.ui.presentation.scanner
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.richi_mc.myapplication.data.api.FinancialScanApiService
+import com.richi_mc.myapplication.data.api.dto.ScanRequest
+import com.richi_mc.myapplication.data.api.dto.ScanResponse
+import com.richi_mc.myapplication.data.model.TicketEntity
+import com.richi_mc.myapplication.domain.TicketRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Date
+
+@HiltViewModel
+class OCRViewModel @Inject constructor(
+    private val apiService: FinancialScanApiService,
+    private val ticketRepository: TicketRepository
+) : ViewModel() {
+
+    private val _apiResponse = MutableStateFlow<ScanResponse?>(null)
+    val apiResponse: StateFlow<ScanResponse?> = _apiResponse
+
+    private val _isSendingToApi = MutableStateFlow(false)
+    val isSendingToApi: StateFlow<Boolean> = _isSendingToApi
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage
+
+    fun sendTextToBackend(extractedText: String) {
+        if (extractedText.isBlank()) return
+
+        _isSendingToApi.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val request = ScanRequest(
+                    userId = "65f4a1b2c3d4e5f6a7b8c9d0",
+                    tipoDePeticion = 0, // 0 = OCR
+                    texto = extractedText
+                )
+
+                val response = apiService.scanTicket(request)
+
+                if (response.isSuccessful && response.body()?.ok == true) {
+                    val scanResponse = response.body()!!
+                    val ticketData = scanResponse.ticket
+
+                    withContext(Dispatchers.IO) {
+                        // Iteramos sobre la lista de productos de la IA
+                        val productos = ticketData.productos ?: emptyList()
+
+                        productos.forEach { producto ->
+                            val newTicket = TicketEntity(
+                                date = Date(), // Fecha actual del escaneo
+                                trade = ticketData.comercio,
+                                productName = producto.nombre,
+                                price = producto.precio.toFloat(),
+                                category = producto.categoria
+                            )
+                            // Guardamos cada producto como un registro independiente
+                            ticketRepository.insertTicket(newTicket)
+                        }
+                    }
+
+                    _apiResponse.value = scanResponse
+
+                } else {
+                    _errorMessage.value = "Error del servidor: Code ${response.code()}"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error de conexión: ${e.localizedMessage}"
+            } finally {
+                _isSendingToApi.value = false
+            }
+        }
+    }
+
+    // Función útil por si escanean otro ticket y quieres limpiar la pantalla
+    fun clearResponse() {
+        _apiResponse.value = null
+        _errorMessage.value = null
+    }
+}
