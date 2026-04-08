@@ -25,6 +25,7 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions.*
 import com.richi_mc.myapplication.helpers.TextRecognitionHelper
+import com.richi_mc.myapplication.ui.components.TicketItem
 import kotlinx.coroutines.launch
 
 @Composable
@@ -43,6 +44,7 @@ fun OcrScreen(
 
     // ── Estados del ViewModel (Red y Lógica de Negocio) ──
     val apiResponse by viewModel.apiResponse.collectAsStateWithLifecycle()
+    val scannedTickets by viewModel.scannedTickets.collectAsStateWithLifecycle()
     val isSendingToApi by viewModel.isSendingToApi.collectAsStateWithLifecycle()
     val apiError by viewModel.errorMessage.collectAsStateWithLifecycle()
 
@@ -307,6 +309,21 @@ fun OcrScreen(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
                     )
+
+                    if (scannedTickets.isNotEmpty()) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Text(
+                            "Productos detectados:",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        scannedTickets.forEach { ticket ->
+                            TicketItem(
+                                ticket = ticket,
+                                modifier = Modifier.padding(vertical = 4.dp, horizontal = 0.dp)
+                            )
+                        }
+                    }
                 }
             }
         }

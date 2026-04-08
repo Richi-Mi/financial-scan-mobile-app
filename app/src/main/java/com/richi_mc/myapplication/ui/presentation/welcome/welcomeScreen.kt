@@ -13,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,7 +37,7 @@ fun welcomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0F0F0F))
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -47,12 +46,12 @@ fun welcomeScreen(
             text = "Financial Scan",
             fontSize = 40.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Tu salud financiera con IA",
-            color = Color(0xFF888888),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 16.sp
         )
 
@@ -61,25 +60,34 @@ fun welcomeScreen(
         AnimatedContent(targetState = state, label = "splash_states") { currentState ->
             when (currentState) {
                 is SplashState.Loading -> {
-                    CircularProgressIndicator(color = Color(0xFF4ADE80))
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
 
                 is SplashState.RequireName -> {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("¿Cómo te llamas?", color = Color.White, fontSize = 18.sp)
+                        Text(
+                            text = "¿Cómo te llamas?",
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontSize = 18.sp
+                        )
                         Spacer(modifier = Modifier.height(16.dp))
 
                         OutlinedTextField(
                             value = nameInput,
                             onValueChange = { nameInput = it },
-                            placeholder = { Text("Ej. Ricardo", color = Color(0xFF555555)) },
+                            placeholder = {
+                                Text(
+                                    text = "Ej. Ricardo",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                )
+                            },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF4ADE80),
-                                unfocusedBorderColor = Color(0xFF333333),
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                             ),
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -91,30 +99,42 @@ fun welcomeScreen(
                             enabled = nameInput.isNotBlank(),
                             modifier = Modifier.fillMaxWidth().height(50.dp),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4ADE80))
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
                         ) {
-                            Text("Comenzar", color = Color.Black, fontWeight = FontWeight.Bold)
+                            Text("Comenzar", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
 
                 is SplashState.Registering -> {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator(color = Color(0xFF4ADE80))
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Creando tu perfil...", color = Color(0xFF888888))
+                        Text(
+                            text = "Creando tu perfil...",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
 
                 is SplashState.Error -> {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(currentState.message, color = Color(0xFFFF6B6B))
+                        Text(
+                            text = currentState.message,
+                            color = MaterialTheme.colorScheme.error
+                        )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
                             onClick = { viewModel.resetToInput() },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4ADE80))
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
                         ) {
-                            Text("Intentar de nuevo", color = Color.Black)
+                            Text("Intentar de nuevo")
                         }
                     }
                 }

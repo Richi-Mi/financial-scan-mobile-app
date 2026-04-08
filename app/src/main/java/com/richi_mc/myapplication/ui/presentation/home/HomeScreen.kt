@@ -11,12 +11,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -126,11 +129,6 @@ fun HomeScreen() {
                 .padding(innerPadding),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-
-            // Salud Financiera
-            item {
-                FinancialHealth(healthPercentage = healthPercentage)
-            }
             item {
                 PieChartDistribution(categoryDistribution)
             }
@@ -165,67 +163,9 @@ fun HomeScreen() {
     }
 }
 
-@Composable
-fun FinancialHealth(
-    healthPercentage: Int = 72,
-    healthStatus: String = "Saludable",
-    statusColor: Color = Color(0xFF4CAF50),
-    modifier: Modifier = Modifier
-) {
-    val containerColor = MaterialTheme.colorScheme.primaryContainer
-    val onContainerColor = MaterialTheme.colorScheme.onPrimaryContainer
 
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(24.dp)),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primary
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Porcentaje
-            Text(
-                text = "$healthPercentage%",
-                fontSize = 56.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
 
-            // Etiqueta "Salud financiera"
-            Text(
-                text = "Salud financiera",
-                fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.9f),
-                fontWeight = FontWeight.Medium
-            )
-
-            // Badge de estado
-            Surface(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp)),
-                color = statusColor
-            ) {
-                Text(
-                    text = healthStatus,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
-                )
-            }
-        }
-    }
-}
-
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PieChartDistribution(
     categoryDistribution: List<Pair<String, Double>>,
@@ -234,49 +174,82 @@ fun PieChartDistribution(
     if (categoryDistribution.isEmpty()) return
 
     val total = categoryDistribution.sumOf { it.second }
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val backgroundColor = MaterialTheme.colorScheme.background
 
-    Box(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(1f)
             .padding(16.dp),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            var startAngle = -90f
+        Box(
+            modifier = Modifier
+                .size(200.dp)
+                .aspectRatio(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                var startAngle = -90f
 
-            categoryDistribution.forEach { (category, amount) ->
-                val sweepAngle = (amount / total * 360).toFloat()
-                val color = getCategoryColor(category)
+                categoryDistribution.forEach { (category, amount) ->
+                    val sweepAngle = (amount / total * 360).toFloat()
+                    val color = getCategoryColor(category)
 
-                drawArc(
-                    color = color,
-                    startAngle = startAngle,
-                    sweepAngle = sweepAngle,
-                    useCenter = true,
-                    size = size.copy(
-                        width = size.width * 0.7f,
-                        height = size.height * 0.7f
-                    ),
-                    topLeft = Offset(
-                        x = (size.width - size.width * 0.7f) / 2,
-                        y = (size.height - size.height * 0.7f) / 2
+                    drawArc(
+                        color = color,
+                        startAngle = startAngle,
+                        sweepAngle = sweepAngle,
+                        useCenter = true,
+                        size = size,
+                        topLeft = Offset.Zero
+                    )
+
+                    startAngle += sweepAngle
+                }
+
+                // Círculo del color del fondo en el centro para efecto donut
+                drawCircle(
+                    color = backgroundColor,
+                    radius = size.minDimension * 0.35f,
+                    center = Offset(
+                        x = size.width / 2,
+                        y = size.height / 2
                     )
                 )
-
-                startAngle += sweepAngle
             }
+        }
 
-            // Círculo del color del fondo en el centro para efecto donut
-            drawCircle(
-                color = primaryColor,
-                radius = size.minDimension * 0.25f,
-                center = Offset(
-                    x = size.width / 2,
-                    y = size.height / 2
-                )
-            )
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Leyenda de categorías
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            maxItemsInEachRow = 3
+        ) {
+            categoryDistribution.forEach { (category, amount) ->
+                val percentage = (amount / total * 100).toInt()
+                if (percentage > 0) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(getCategoryColor(category))
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "$category $percentage%",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+            }
         }
     }
 }

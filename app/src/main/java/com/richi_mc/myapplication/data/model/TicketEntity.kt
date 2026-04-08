@@ -24,4 +24,5 @@ data class TicketEntity(
 
     @ColumnInfo(name = "category")
     val category : String
+
 )

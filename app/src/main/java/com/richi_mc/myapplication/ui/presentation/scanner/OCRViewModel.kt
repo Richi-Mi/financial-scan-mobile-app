@@ -28,6 +28,9 @@ class OCRViewModel @Inject constructor(
     private val _apiResponse = MutableStateFlow<ScanResponse?>(null)
     val apiResponse: StateFlow<ScanResponse?> = _apiResponse
 
+    private val _scannedTickets = MutableStateFlow<List<TicketEntity>>(emptyList())
+    val scannedTickets: StateFlow<List<TicketEntity>> = _scannedTickets
+
     private val _isSendingToApi = MutableStateFlow(false)
     val isSendingToApi: StateFlow<Boolean> = _isSendingToApi
 
@@ -62,6 +65,8 @@ class OCRViewModel @Inject constructor(
                     val scanResponse = response.body()!!
                     val ticketData = scanResponse.ticket
 
+                    val entities = mutableListOf<TicketEntity>()
+
                     withContext(Dispatchers.IO) {
                         // Iteramos sobre la lista de productos de la IA
                         val productos = ticketData.productos ?: emptyList()
@@ -74,11 +79,13 @@ class OCRViewModel @Inject constructor(
                                 price = producto.precio.toFloat(),
                                 category = producto.categoria
                             )
+                            entities.add(newTicket)
                             // Guardamos cada producto como un registro independiente
                             ticketRepository.insertTicket(newTicket)
                         }
                     }
 
+                    _scannedTickets.value = entities
                     _apiResponse.value = scanResponse
 
                 } else {
@@ -95,6 +102,7 @@ class OCRViewModel @Inject constructor(
     // Función útil por si escanean otro ticket y quieres limpiar la pantalla
     fun clearResponse() {
         _apiResponse.value = null
+        _scannedTickets.value = emptyList()
         _errorMessage.value = null
     }
 }
