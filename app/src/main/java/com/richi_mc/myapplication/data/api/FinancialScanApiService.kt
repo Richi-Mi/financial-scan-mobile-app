@@ -1,10 +1,13 @@
 package com.richi_mc.myapplication.data.api
 
+import com.richi_mc.myapplication.data.api.dto.CreateUserRequest
 import com.richi_mc.myapplication.data.api.dto.DashboardResponse
 import com.richi_mc.myapplication.data.api.dto.ScanRequest
 import com.richi_mc.myapplication.data.api.dto.ScanResponse
 import com.richi_mc.myapplication.data.api.dto.SyncRequest
 import com.richi_mc.myapplication.data.api.dto.SyncResponse
+import com.richi_mc.myapplication.data.api.dto.CreateUserResponse
+import com.richi_mc.myapplication.data.api.dto.ProfileResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -27,4 +30,12 @@ interface FinancialScanApiService {
     suspend fun getDashboard(
         @Query("user_id") userId: String
     ): Response<DashboardResponse>
+
+    @POST("api/users")
+    suspend fun createUser(@Body request: CreateUserRequest): Response<CreateUserResponse>
+
+    @GET("api/general")
+    suspend fun getGeneral(
+        @Query("user_id") userId: String
+    ): Response<ProfileResponse>
 }

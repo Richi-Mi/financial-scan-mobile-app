@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.richi_mc.myapplication.data.api.FinancialScanApiService
 import com.richi_mc.myapplication.data.api.dto.ScanRequest
 import com.richi_mc.myapplication.data.api.dto.ScanResponse
+import com.richi_mc.myapplication.data.localimport.UserPreferences
 import com.richi_mc.myapplication.data.model.TicketEntity
 import com.richi_mc.myapplication.domain.TicketRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,6 +13,7 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Date
@@ -19,7 +21,8 @@ import java.util.Date
 @HiltViewModel
 class OCRViewModel @Inject constructor(
     private val apiService: FinancialScanApiService,
-    private val ticketRepository: TicketRepository
+    private val ticketRepository: TicketRepository,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
 
     private val _apiResponse = MutableStateFlow<ScanResponse?>(null)
@@ -39,8 +42,16 @@ class OCRViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                val realUserId = userPreferences.userIdFlow.first()
+
+                if (realUserId.isNullOrBlank()) {
+                    _errorMessage.value = "Error: Usuario no identificado."
+                    _isSendingToApi.value = false
+                    return@launch
+                }
+
                 val request = ScanRequest(
-                    userId = "65f4a1b2c3d4e5f6a7b8c9d0",
+                    userId = realUserId,
                     tipoDePeticion = 0, // 0 = OCR
                     texto = extractedText
                 )

@@ -31,12 +31,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.richi_mc.myapplication.R
-import com.richi_mc.myapplication.ui.presentation.history.LlmScreen
 import com.richi_mc.myapplication.ui.presentation.history.MisTicketsScreen
 import com.richi_mc.myapplication.ui.presentation.home.HomeScreen
 import com.richi_mc.myapplication.ui.presentation.profile.ProfileScreen
 import com.richi_mc.myapplication.ui.presentation.record.SpeechScreen
 import com.richi_mc.myapplication.ui.presentation.scanner.OcrScreen
+import com.richi_mc.myapplication.ui.presentation.welcome.welcomeScreen // <-- Tu import conservado
 
 private data class BottomNavItem<T : Any>(
     val name: String,
@@ -53,72 +53,90 @@ fun FinantialNavigationWrapper() {
     val items = listOf(
         BottomNavItem(stringResource(R.string.nav_bar_home),    Main,    Icons.Default.Home),
         BottomNavItem(stringResource(R.string.nav_bar_history), History, Icons.AutoMirrored.Filled.List),
-        BottomNavItem(stringResource(R.string.nav_bar_scan),    Scan,  Icons.Default.DocumentScanner),
-        BottomNavItem(stringResource(R.string.nav_bar_record),  Record,    Icons.Default.Mic),
-        BottomNavItem(stringResource(R.string.nav_bar_profile), Profile,    Icons.Default.Person)
+        BottomNavItem(stringResource(R.string.nav_bar_scan),    Scan,    Icons.Default.DocumentScanner),
+        BottomNavItem(stringResource(R.string.nav_bar_record),  Record,  Icons.Default.Mic),
+        BottomNavItem(stringResource(R.string.nav_bar_profile), Profile, Icons.Default.Person)
     )
+
+    // Observamos el backstack para saber en qué pantalla estamos (Tu lógica conservada)
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+
+    // Solo mostramos el BottomBar si NO estamos en la pantalla de welcome (Tu lógica conservada)
+    val showBottomBar = currentDestination?.hasRoute(welcome::class) == false
 
     Scaffold(
         contentWindowInsets = WindowInsets(top = 0.dp),
         bottomBar = {
-
-            val navBackStackEntry by navController.currentBackStackEntryAsState()
-            val currentDestination = navBackStackEntry?.destination
-
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                tonalElevation = 8.dp
-            ) {
-                items.forEach { item ->
-                    val isSelected = currentDestination?.hasRoute(item.route::class) == true
-                    NavigationBarItem(
-                        selected = isSelected,
-                        onClick = {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            if (showBottomBar) {
+                // Aplicamos los estilos de tu compañero al NavigationBar
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    tonalElevation = 8.dp
+                ) {
+                    items.forEach { item ->
+                        val isSelected = currentDestination?.hasRoute(item.route::class) == true
+                        NavigationBarItem(
+                            selected = isSelected,
+                            onClick = {
+                                navController.navigate(item.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = { 
-                            Icon(
-                                imageVector = item.icon, 
-                                contentDescription = item.name
-                            ) 
-                        },
-                        label = { 
-                            Text(
-                                text = item.name,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            ) 
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = item.icon,
+                                    contentDescription = item.name
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = item.name,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            // Estilos de colores de tu compañero
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                            )
                         )
-                    )
+                    }
                 }
             }
-
         }
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Main,
+            startDestination = welcome, // <-- Tu lógica conservada (inicio en welcome)
             modifier = Modifier.padding(paddingValues = innerPadding)
         ) {
+
+            // Tu pantalla de Bienvenida
+            composable<welcome> {
+                welcomeScreen(
+                    onNavigateToMain = {
+                        navController.navigate(Main) {
+                            popUpTo(welcome) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
             composable<Main> {
                 HomeScreen()
             }
             composable<History> {
-                MisTicketsScreen()
+                MisTicketsScreen() // <-- La pantalla de tu compañero conservada
             }
             composable<Scan> {
                 OcrScreen()

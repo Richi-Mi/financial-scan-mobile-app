@@ -96,14 +96,15 @@ fun HomeScreen() {
     val healthPercentage by homeViewModel.healthPercentage.collectAsState()
     val categoryDistribution by homeViewModel.categoryDistribution.collectAsState()
 
+    val userName by homeViewModel.userName.collectAsState()
+
     Scaffold (
         topBar = {
             TopAppBar(
                 title = {
-                    // TODO: Change with the real username
                     Column {
                         Text(
-                            text = "Hola Carlos",
+                            text = "Hola ${userName}",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )

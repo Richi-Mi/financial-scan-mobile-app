@@ -10,9 +10,10 @@ import com.richi_mc.myapplication.domain.TicketRepository
 import com.richi_mc.myapplication.helpers.SpeechRecognizerHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-
+import kotlinx.coroutines.flow.first
 import androidx.lifecycle.viewModelScope
 import com.richi_mc.myapplication.data.api.dto.ScanRequest
+import com.richi_mc.myapplication.data.localimport.UserPreferences
 import com.richi_mc.myapplication.data.model.TicketEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,7 +24,8 @@ import java.util.Date
 class SpeechViewModel @Inject constructor(
     private val ticketRepository: TicketRepository,
     private val speechRecognizerHelper: SpeechRecognizerHelper,
-    private val financialScanApiService: FinancialScanApiService
+    private val financialScanApiService: FinancialScanApiService,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
 
     var isListening by mutableStateOf(false)
@@ -77,10 +79,12 @@ class SpeechViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
             try {
+                val realUserId = userPreferences.userIdFlow.first() ?: return@launch
+
                 // Usamos scanTicket con tipoDePeticion = 1 (Voz) ya que es el flujo para dictado
                 val response = financialScanApiService.scanTicket(
                     ScanRequest(
-                        userId = "65f4a1b2c3d4e5f6a7b8c9d0",
+                        userId = realUserId,
                         tipoDePeticion = 1,
                         texto = text
                     )

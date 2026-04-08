@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.richi_mc.myapplication.data.localimport.UserPreferences
 import com.richi_mc.myapplication.data.mocks.MockTicketData
 import com.richi_mc.myapplication.data.model.TicketEntity
 import com.richi_mc.myapplication.domain.TicketRepository
@@ -24,7 +25,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val ticketRepository: TicketRepository
+    private val ticketRepository: TicketRepository,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
 
     val tickets: StateFlow<List<TicketEntity>> = ticketRepository.getAllTickets()
@@ -33,6 +35,12 @@ class HomeViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    val userName = userPreferences.userNameFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ""
+    )
 
     val totalExpense: StateFlow<Float> = tickets.map { tickets ->
         tickets.sumOf { it.price.toDouble() }.toFloat()
