@@ -1,4 +1,4 @@
-# Financial Scan 🧾📱
+# Finantial Scan 🧾📱
 
 **Financial Scan** es una aplicación moderna de Android diseñada para ayudar a los usuarios a gestionar sus finanzas personales mediante el escaneo y la extracción de información de recibos y tickets.
 
