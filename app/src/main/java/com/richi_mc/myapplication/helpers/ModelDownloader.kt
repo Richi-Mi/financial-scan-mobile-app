@@ -34,7 +34,7 @@ object ModelDownloader {
             val modelFile = getModelFile(context)
             val tempFile = File(modelFile.parent, "${modelFile.name}.tmp")
 
-            val hfToken = "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"
+            val hfToken = "--"
             val connection = (URL(MODEL_URL).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 30_000
                 readTimeout = 60_000
