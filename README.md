@@ -2,6 +2,9 @@
 
 **Financial Scan** es una aplicación Android moderna diseñada para ayudar a los usuarios a llevar un control inteligente de sus gastos personales. Utiliza Inteligencia Artificial (IA) y Reconocimiento Óptico de Caracteres (OCR) para automatizar el registro de tickets y ofrecer análisis financieros detallados.
 
+## Link del repositorio de Backend.
+[Repositorio de la API de Financial Scan](https://github.com/AlexisInsMu/financial_scan_backend)
+
 ## 🌟 Características Principales
 
 *   **Escaneo de Tickets (OCR):** Utiliza Google ML Kit Document Scanner para digitalizar tickets físicos. El texto extraído es procesado por un backend con IA para identificar automáticamente el comercio, los productos, precios y categorías.
