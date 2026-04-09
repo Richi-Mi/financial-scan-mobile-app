@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.richi_mc.myapplication.data.model.TicketEntity
 import com.richi_mc.myapplication.domain.TicketRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -21,4 +23,16 @@ class HistoryViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    fun updateTicket(ticket: TicketEntity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            ticketRepository.updateTicket(ticket)
+        }
+    }
+
+    fun deleteTicket(ticket: TicketEntity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            ticketRepository.deleteTicket(ticket)
+        }
+    }
 }

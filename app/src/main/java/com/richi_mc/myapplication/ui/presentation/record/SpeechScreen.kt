@@ -82,9 +82,10 @@ fun SpeechScreen() {
             color = MaterialTheme.colorScheme.onBackground
         )
         Text(
-            "Habla y convierte tu voz a texto",
+            "Explicame ¿Qué compraste? ¿Donde lo compraste? y ¿Cuánto gastaste?",
             fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
 
         // Contenedor principal que ocupa el espacio central
