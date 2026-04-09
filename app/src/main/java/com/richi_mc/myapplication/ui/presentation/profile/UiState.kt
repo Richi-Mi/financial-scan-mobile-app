@@ -9,7 +9,6 @@ sealed class ProfileUiState {
         val miembroDesde: String,
         val scoreFactores: ScoreFactores,
         val resumenIA: String,
-        val mensajeMotivacional: String,
         val tips: List<MejoraTip>
     ) : ProfileUiState()
     data class Error(val message: String) : ProfileUiState()

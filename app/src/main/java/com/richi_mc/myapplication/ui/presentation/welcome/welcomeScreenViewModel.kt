@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.richi_mc.myapplication.data.api.FinancialScanApiService
 import com.richi_mc.myapplication.data.api.dto.CreateUserRequest
-import com.richi_mc.myapplication.data.localimport.UserPreferences
+import com.richi_mc.myapplication.data.local.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

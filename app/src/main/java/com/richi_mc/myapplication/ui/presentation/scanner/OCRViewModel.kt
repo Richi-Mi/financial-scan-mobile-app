@@ -5,11 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.richi_mc.myapplication.data.api.FinancialScanApiService
 import com.richi_mc.myapplication.data.api.dto.ScanRequest
 import com.richi_mc.myapplication.data.api.dto.ScanResponse
-import com.richi_mc.myapplication.data.localimport.UserPreferences
+import com.richi_mc.myapplication.data.local.UserPreferences
 import com.richi_mc.myapplication.data.model.TicketEntity
 import com.richi_mc.myapplication.domain.TicketRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jakarta.inject.Inject
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -65,6 +65,11 @@ class OCRViewModel @Inject constructor(
                     val scanResponse = response.body()!!
                     val ticketData = scanResponse.ticket
 
+                    // --- NUEVO: ACTUALIZAMOS EL SCORE IA EN DATASTORE ---
+                    val nuevoScore = scanResponse.score.valor.toString()
+                    userPreferences.saveUserScoreIa(nuevoScore)
+                    // ----------------------------------------------------
+
                     val entities = mutableListOf<TicketEntity>()
 
                     withContext(Dispatchers.IO) {
@@ -73,14 +78,14 @@ class OCRViewModel @Inject constructor(
 
                         productos.forEach { producto ->
                             val newTicket = TicketEntity(
-                                date = Date(), // Fecha actual del escaneo
+                                id = 0, // Siempre 0 para autogenerar
+                                date = Date(),
                                 trade = ticketData.comercio,
                                 productName = producto.nombre,
                                 price = producto.precio.toFloat(),
                                 category = producto.categoria
                             )
                             entities.add(newTicket)
-                            // Guardamos cada producto como un registro independiente
                             ticketRepository.insertTicket(newTicket)
                         }
                     }

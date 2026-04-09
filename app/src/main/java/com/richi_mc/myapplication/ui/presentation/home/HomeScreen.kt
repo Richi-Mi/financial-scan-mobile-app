@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -60,6 +61,7 @@ fun getCategoryColor(category: String): Color {
         "entretenimiento" -> Color(0xFF9C27B0) // Púrpura
         "salud" -> Color(0xFF4CAF50) // Verde
         "compras" -> Color(0xFF00BCD4) // Cyan
+        "servicios" -> Color(0xFF673AB7) // Azul fuerte
         else -> Color(0xFF757575) // Gris
     }
 }
@@ -101,6 +103,8 @@ fun HomeScreen() {
 
     val userName by homeViewModel.userName.collectAsState()
 
+    val scoreIA by homeViewModel.scoreIA.collectAsState()
+
     Scaffold (
         topBar = {
             TopAppBar(
@@ -129,6 +133,10 @@ fun HomeScreen() {
                 .padding(innerPadding),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            item {
+                ScoreIACard(score = scoreIA ?: "0")
+            }
+
             item {
                 PieChartDistribution(categoryDistribution)
             }
@@ -409,6 +417,80 @@ fun Ticket(
     }
 }
 
+@Composable
+fun ScoreIACard(
+    score: String,
+    modifier: Modifier = Modifier
+) {
+    val scoreInt = score.toIntOrNull() ?: 0
+
+    // Definimos el color y el estado según el puntaje
+    val (backgroundColor, statusText) = when {
+        scoreInt >= 80 -> Color(0xFF4CAF50) to "Excelente"
+        scoreInt >= 60 -> Color(0xFF8BC34A) to "Saludable"
+        scoreInt >= 40 -> Color(0xFFFFC107) to "Regular"
+        scoreInt >= 20 -> Color(0xFFFF9800) to "En riesgo"
+        else -> Color(0xFFF44336) to "Crítico"
+    }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(24.dp)),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "Score IA",
+                    fontSize = 14.sp,
+                    color = Color.White.copy(alpha = 0.9f),
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = statusText,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Text(
+                    text = "Salud Financiera",
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.8f),
+                    fontWeight = FontWeight.Normal
+                )
+            }
+
+            // Círculo con el Score
+            Box(
+                modifier = Modifier
+                    .size(70.dp)
+                    .clip(CircleShape)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = score,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = backgroundColor
+                )
+            }
+        }
+    }
+}
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showSystemUi = true)

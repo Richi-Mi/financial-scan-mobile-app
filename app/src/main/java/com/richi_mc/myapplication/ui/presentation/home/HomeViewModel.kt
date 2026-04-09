@@ -7,7 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.richi_mc.myapplication.data.localimport.UserPreferences
+import com.richi_mc.myapplication.data.api.FinancialScanApiService
+import com.richi_mc.myapplication.data.local.UserPreferences
 import com.richi_mc.myapplication.data.mocks.MockTicketData
 import com.richi_mc.myapplication.data.model.TicketEntity
 import com.richi_mc.myapplication.domain.TicketRepository
@@ -15,6 +16,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -26,7 +28,8 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val ticketRepository: TicketRepository,
-    private val userPreferences: UserPreferences
+    private val userPreferences: UserPreferences,
+    private val apiService: FinancialScanApiService
 ) : ViewModel() {
 
     val tickets: StateFlow<List<TicketEntity>> = ticketRepository.getAllTickets()
@@ -68,6 +71,11 @@ class HomeViewModel @Inject constructor(
         initialValue = 100
     )
 
+    val scoreIA = userPreferences.userScoreIaFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = "..." // Valor por defecto mientras carga
+    )
     val categoryDistribution: StateFlow<List<Pair<String, Double>>> = tickets.map { tickets ->
         tickets.groupBy { it.category }
             .mapValues { (_, items) -> items.sumOf { it.price.toDouble() } }
@@ -86,4 +94,36 @@ class HomeViewModel @Inject constructor(
         return actualDate.format(formatter).uppercase()
 
     }
+
+    init {
+        fetchLatestScore()
+    }
+    private fun fetchLatestScore() {
+        viewModelScope.launch {
+            try {
+                // 1. Obtenemos el ID del usuario
+                val userId = userPreferences.userIdFlow.first()
+
+                if (!userId.isNullOrBlank()) {
+                    // 2. Llamamos a la API (asumiendo que tu endpoint se llama getGeneral)
+                    val response = apiService.getGeneral(userId)
+
+                    if (response.isSuccessful && response.body()?.ok == true) {
+                        // 3. Extraemos SOLO el valor del score
+                        val nuevoScore = response.body()!!.score?.valor?.toString()
+
+                        if (nuevoScore != null) {
+                            // 4. Lo guardamos en las preferencias.
+                            // ¡Esto hará que la UI se actualice automáticamente!
+                            userPreferences.saveUserScoreIa(nuevoScore)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Si falla el internet, fallamos silenciosamente.
+                // El usuario simplemente seguirá viendo el score que estaba guardado localmente.
+            }
+        }
+    }
 }
+

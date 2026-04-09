@@ -13,7 +13,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import androidx.lifecycle.viewModelScope
 import com.richi_mc.myapplication.data.api.dto.ScanRequest
-import com.richi_mc.myapplication.data.localimport.UserPreferences
+import com.richi_mc.myapplication.data.local.UserPreferences
 import com.richi_mc.myapplication.data.model.TicketEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -91,8 +91,17 @@ class SpeechViewModel @Inject constructor(
                 )
 
                 if (response.isSuccessful && response.body()?.ok == true) {
-                    val ticketData = response.body()!!.ticket
+                    val scanResponse = response.body()!! // Guardamos la respuesta completa
+                    val ticketData = scanResponse.ticket
+
+                    // --- NUEVO: ACTUALIZAMOS EL SCORE IA EN DATASTORE ---
+                    val nuevoScore = scanResponse.score.valor.toString()
+                    userPreferences.saveUserScoreIa(nuevoScore)
+                    // ----------------------------------------------------
+
+                    // *Nota: Recuerda poner id = 0 aquí para que Room lo autogenere correctamente
                     val newTicket = TicketEntity(
+                        id = 0,
                         date = Date(),
                         trade = ticketData.comercio,
                         productName = ticketData.productos?.firstOrNull()?.nombre ?: "Gasto por voz",
@@ -100,9 +109,20 @@ class SpeechViewModel @Inject constructor(
                         category = ticketData.productos?.firstOrNull()?.categoria ?: "Gasto por voz"
                     )
                     withContext(Dispatchers.IO) {
-                        val id = ticketRepository.insertTicket(newTicket)
-                        newTicket.id = id
-                        lastCreatedTicket = newTicket
+                        val insertedId = ticketRepository.insertTicket(newTicket)
+
+                        // Recreamos el ticket con el ID real de la base de datos
+                        val ticketConIdReal = TicketEntity(
+                            id = insertedId,
+                            date = newTicket.date,
+                            trade = newTicket.trade,
+                            productName = newTicket.productName,
+                            price = newTicket.price,
+                            category = newTicket.category
+                        )
+                        withContext(Dispatchers.Main) {
+                            lastCreatedTicket = ticketConIdReal
+                        }
                     }
                 } else {
                     Log.e("ERROR", "Error procesando texto ${response.toString()}")

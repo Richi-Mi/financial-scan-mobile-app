@@ -14,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -152,13 +153,13 @@ fun SuccessProfileContent(
                         modifier = Modifier.weight(1f),
                         title = "Frecuencia",
                         score = state.scoreFactores.frecuencia,
-                        progress = state.scoreFactores.frecuencia / 100f
+                        maxScore = 35
                     )
                     ScoreFactorCard(
                         modifier = Modifier.weight(1f),
                         title = "Control hormiga",
                         score = state.scoreFactores.control_hormiga,
-                        progress = state.scoreFactores.control_hormiga / 100f
+                        maxScore = 25
                     )
                 }
 
@@ -169,15 +170,19 @@ fun SuccessProfileContent(
                         modifier = Modifier.weight(1f),
                         title = "Tendencia",
                         score = state.scoreFactores.tendencia,
-                        progress = state.scoreFactores.tendencia / 100f
+                        maxScore = 25
                     )
                     ScoreFactorCard(
                         modifier = Modifier.weight(1f),
                         title = "Diversidad",
                         score = state.scoreFactores.diversidad_categorias,
-                        progress = state.scoreFactores.diversidad_categorias / 100f
+                        maxScore = 15
                     )
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+
             }
         }
 
@@ -198,18 +203,28 @@ fun SuccessProfileContent(
                     Spacer(modifier = Modifier.height(12.dp))
                 }
             }
-        }
 
-        // --- MENSAJE MOTIVACIONAL ---
-        item {
-            Text(
-                text = "\"${state.mensajeMotivacional}\"",
-                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 14.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-            )
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Explicación de los parámetros
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                ParameterExplanation(
+                    title = "Frecuencia",
+                    description = "Premia la constancia de registro. El objetivo ideal es escanear al menos 8 tickets al mes."
+                )
+                ParameterExplanation(
+                    title = "Control hormiga",
+                    description = "Mide el impacto de tus gastos pequeños. Mantenerlo por debajo del 40% del total es clave."
+                )
+                ParameterExplanation(
+                    title = "Tendencia",
+                    description = "Compara tu desempeño con el mes anterior. Reconoce tu esfuerzo por mejorar tus hábitos."
+                )
+                ParameterExplanation(
+                    title = "Diversidad",
+                    description = "Valora que registres gastos en 4 o más categorías para un análisis financiero completo."
+                )
+            }
         }
     }
 }
@@ -217,12 +232,39 @@ fun SuccessProfileContent(
 // --- SUB-COMPONENTES DE UI ---
 
 @Composable
+fun ParameterExplanation(title: String, description: String) {
+    Column (modifier = Modifier.alpha(0.5f)) {
+        Text(
+            text = title,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = description,
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            lineHeight = 18.sp
+        )
+    }
+}
+
+@Composable
 fun ScoreFactorCard(
     modifier: Modifier = Modifier,
     title: String,
     score: Int,
-    progress: Float
+    maxScore: Int
 ) {
+    val progress = if (maxScore > 0) score.toFloat() / maxScore else 0f
+    val statusColor = when {
+        progress >= 0.8f -> Color(0xFF4CAF50) // Verde (Excelente)
+        progress >= 0.6f -> Color(0xFF8BC34A) // Lima (Saludable)
+        progress >= 0.4f -> Color(0xFFFFC107) // Ámbar (Regular)
+        progress >= 0.2f -> Color(0xFFFF9800) // Naranja (En riesgo)
+        else -> Color(0xFFF44336)             // Rojo (Crítico)
+    }
+
     Card(
         modifier = modifier.height(100.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -233,15 +275,15 @@ fun ScoreFactorCard(
             Text(title, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
 
             Row(verticalAlignment = Alignment.Bottom) {
-                Text("$score", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                Text("pts", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 2.dp, bottom = 4.dp))
+                Text("$score", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = statusColor)
+                Text("/$maxScore", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), modifier = Modifier.padding(start = 2.dp, bottom = 4.dp))
             }
 
             LinearProgressIndicator(
-                progress = { progress },
+                progress = { progress.coerceIn(0f, 1f) },
                 modifier = Modifier.fillMaxWidth().height(4.dp).clip(CircleShape),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                color = statusColor,
+                trackColor = statusColor.copy(alpha = 0.1f)
             )
         }
     }
